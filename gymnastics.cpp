@@ -1,3 +1,7 @@
+/*
+USACO 2019 December Contest, Bronze
+Problem 1. Cow Gymnastics
+*/
 #include <iostream>
 #include <vector>
 #include <algorithm>
