@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sushi Kumar</title>
+</head>
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<body>
+<canvas id = "canvas" width="900" height="450">Your Browser doesn't support canvas
+</canvas>
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+pi = Math.PI;
+dx = 2*Math.round(Math.random())-1;
+dy = 2*Math.round(Math.random())-1;
+windx = 900;
+windy = 450;
+ballSpd = 1.5;
+ballR = 15;
+initX = ballSpd*Math.random();
+ballVec = [dx*initX,dy*Math.sqrt(ballSpd*ballSpd-initX*initX)]; //normal math vector in xy-plane
+ballPos = [windx/2,windy/2];
+scoreL = 0;
+scoreR = 0;
+paddleHeight = windy/5;
+paddleWidth = paddleHeight; // /4
+paddleSpeed = 0.9;
+cushion = 20;
+posL = [cushion,windy/2-paddleHeight/2];
+posR = [windx-paddleWidth-cushion,windy/2-paddleHeight/2];
+inCourt = true;
+
+function fillRect(color,pos,l,w){
+	ctx.fillStyle = color;
+	ctx.fillRect(pos[0],pos[1],l,w);
+}
+
+function fillCirc(color,pos,r){
+	ctx.beginPath();
+	ctx.arc(pos[0],pos[1],r,0,2*pi);
+	ctx.fillStyle = color;
+	ctx.fill();
+}
+
+function fillText(text,color,size,x,y){
+	ctx.font = String(size)+"px Arial";
+	ctx.fillStyle = color;
+	ctx.textAlign = "center";
+	ctx.fillText(text,x,y);
+}
+
+//Court and Net dont change no matter what moves
+
+function drawState(){
+  fillRect('#000',[0,0],windx,windy);
+  fillRect('#FFF',[windx/2,0],1,windy);
+  fillRect('#FFF',posL,paddleWidth,paddleHeight);
+  fillRect('#FFF',posR,paddleWidth,paddleHeight);
+  if ((ballPos[0]+ballR)*(windx-ballPos[0]+ballR) >= 0 && (ballPos[1]+ballR)*(windy-ballPos[1]+ballR) >= 0) fillCirc('#FFF',ballPos,ballR);
+}
+
+keys = ["KeyW", "KeyS", "ArrowDown", "ArrowUp"];
+moves = [[0,1], [0,-1], [1,-1], [1,1]];
+movePress = [false,false,false,false];
+
+function LeftSideDetect(){
+  if (ballPos[0]-(posL[0]+paddleWidth) < ballR && ballPos[1] + ballR > posL[1] && ballPos[1]-ballR < posL[1] + paddleHeight && !(ballPos[0] < posL[0]+paddleWidth)){
+    return true;
+  } return false;
+}
+
+function LeftTopDetect(){
+  if (ballPos[0] <= posL[0]+paddleWidth && ballPos[0] >= posL[0] && (ballPos[1]+ballR >= posL[1] || ballPos[1]-ballR <= posL[1]+paddleHeight)){ //
+    return true;
+  } return false;
+}
+
+function RightSideDetect(){
+  if (posR[0]-ballPos[0] <= ballR && ballPos[1]+ballR >= posR[1] && ballPos[1]-ballR <= posR[1] + paddleHeight){
+    return true;
+  } return false;
+}
+
+function OutOfRange(){
+  if (ballPos[0]-ballR >= posL[0]+paddleWidth && ballR[0]+ballR <= posR[0]){
+    return false;
+  } return true;
+}
+
+document.addEventListener("keydown",movePaddle);
+document.addEventListener("keyup",stopPaddle);
+
+function movePaddle(event){
+  key = event.code;
+  event.preventDefault();
+  for (i=0; i<4; i++){
+    if (key == keys[i]){
+      movePress[i] = true;
+    }
+  }
+}
+
+function stopPaddle(event){
+  key = event.code;
+  for (i=0; i<4; i++){
+    if (keys[i] == key){
+      movePress[i] = false;
+    }
+  }
+}
+
+function update(){
+  preL = [...posL];
+  preR = [...posR];
+  for (i=0; i<4; i++){
+    if (movePress[i] == true){
+      action = moves[i];
+      if (action[0] == 0){
+        if (action[1] == 1 && posL[1] >= paddleSpeed) {posL[1] -= paddleSpeed;}
+        else if (action[1] == -1 && posL[1] + paddleSpeed <= windy - paddleHeight) {posL[1] += paddleSpeed;}
+      } else if (action[0] == 1) {
+        if (action[1] == 1 && posR[1] >= paddleSpeed) {posR[1] -= paddleSpeed;}
+        else if (action[1] == -1 && posR[1] + paddleSpeed <= windy - paddleHeight) {posR[1] += paddleSpeed;}
+      }
+    }
+  }
+  //lets first make it bounce around
+  if (ballPos[1] + ballVec[1] + ballR > windy && ballPos[0] > posL[0]+paddleWidth && ballPos[0] < posR[0]){
+    ballVec[1] = -ballVec[1];
+  } else if (ballPos[1] + ballVec[1] - ballR < 0 && ballPos[0] > posL[0]+paddleWidth && ballPos[0] < posR[0]) {
+    ballVec[1] = -ballVec[1];
+  } else {
+    //ballPos[0] += ballVec[0];
+    //ballPos[1] += ballVec[1];
+    if (LeftSideDetect() || RightSideDetect()){
+      // ballPos[0] -= ballVec[0];
+      // ballPos[1] -= ballVec[1];
+      ballVec[0] = -ballVec[0];
+      ballPos[0] += ballVec[0];
+      ballPos[1] += ballVec[1];
+    } else if (LeftTopDetect()){
+      console.log(LeftTopDetect());
+
+      ballPos[0] += ballVec[0];
+      ballPos[1] = ;
+      ballVec[1] = -ballVec[1];
+    }
+    else {
+      ballPos[0] += ballVec[0];
+      ballPos[1] += ballVec[1];
+    }
+    //newPos = [ballPos[0] - ballVec[0], ballPos[1] - ballVec[1]];
+    // newPos = [...ballPos];
+    // sxL = preL[0]; //start top left corner
+    // syL = preL[1];
+    // exL = sxL + paddleHeight; // end bottom right corner
+    // eyL = syL + paddleWidth;
+    // sxR = preR[0]; //start top left corner
+    // syR = preR[1];
+    // exR = sxR + paddleHeight; // end bottom right corner
+    // eyR = syR + paddleWidth;
+    // if (newPos[1] >= syR-ballR/Math.sqrt(2) && newPos[1] <= eyR+ballR/Math.sqrt(2) && newPos[0]+ballR > sxR){
+    //   ballVec[0] = -ballVec[0];
+    //   ballPos[0] += ballVec[0];
+    //   ballPos[1] += ballVec[1];
+    // } else if (newPos[1] >= syL-ballR/Math.sqrt(2) && newPos[1] <= eyL+ballR/Math.sqrt(2) && newPos[0]-ballR < exL){
+    //   ballVec[0] = -ballVec[0];
+    //   ballPos[0] += ballVec[0];
+    //   ballPos[1] += ballVec[1];
+    // } else {
+    //   ballPos[0] += ballVec[0];
+    //   ballPos[1] += ballVec[1];
+    // }
+  }
+  drawState();
+}
+
+var ONE_FRAME_TIME = 1000 / 240 ;
+var mainloop = function() {
+	update();
+};
+setInterval( mainloop, ONE_FRAME_TIME );
+
+</script>
+</body>
+</html>
