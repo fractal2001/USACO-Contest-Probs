@@ -1,3 +1,7 @@
+/*
+USACO 2016 January Contest, Silver
+Problem 2. Subsequences Summing to Sevens
+*/
 #include <iostream>
 #include <vector>
 #include <string>
